@@ -179,15 +179,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<!--
-		A configuração do flyway-maven-plugin (incluindo cleanDisabled=false)
-		só existe dentro deste profile, que NUNCA está ativo por default.
-		Isto garante que "mvn flyway:clean" sem a flag -Plocal-dev falha
-		por falta de configuração, em vez de correr silenciosamente.
-
-		Uso: mvnw.cmd flyway:clean -Plocal-dev -f pom.xml
-	-->
 	<profiles>
 		<profile>
 			<id>local-dev</id>
@@ -203,6 +194,7 @@
 							<password>REMOVED</password>
 							<baselineOnMigrate>true</baselineOnMigrate>
 							<locations>classpath:db/migration</locations>
+							<!-- REMOVER ANTES DE SUBIR PARA PRODUÇÃO -->
 							<cleanDisabled>false</cleanDisabled>
 						</configuration>
 					</plugin>
