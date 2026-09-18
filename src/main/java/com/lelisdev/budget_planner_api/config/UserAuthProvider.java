@@ -26,11 +26,15 @@ public class UserAuthProvider {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    @Value("${security.jwt.token.secret:secret-key}")
+    @Value("${security.jwt.token.secret}")
     private String secretKey;
 
     @PostConstruct
     protected void init() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException(
+                    "security.jwt.token.secret não está definido. ");
+        }
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 

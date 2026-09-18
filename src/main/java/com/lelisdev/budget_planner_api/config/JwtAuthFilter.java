@@ -1,11 +1,14 @@
 package com.lelisdev.budget_planner_api.config;
 
+import com.lelisdev.budget_planner_api.exceptions.AppException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -33,16 +36,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(userAuthProvider.validateTokenStrongly(authElements[1]));
                     }
 
-                    SecurityContextHolder.getContext().setAuthentication(userAuthProvider.validateToken(authElements[1]));
-
-                } catch (RuntimeException e) {
-
+                } catch (AppException e) {
                     SecurityContextHolder.clearContext();
-                    throw e;
+                    writeAuthError(response, e.getError().getHttpStatus(), e.getError().getMessage());
+                    return;
+                } catch (RuntimeException e) {
+                    SecurityContextHolder.clearContext();
+                    writeAuthError(response, HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+                    return;
                 }
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeAuthError(HttpServletResponse response, HttpStatus status, String message) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write("{\"message\":\"" + message.replace("\"", "'") + "\"}");
     }
 }
