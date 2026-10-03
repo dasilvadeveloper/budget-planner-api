@@ -24,9 +24,8 @@ public class SecurityConfig {
                 .addFilterBefore(new JwtAuthFilter(userAuthProvider), BasicAuthenticationFilter.class)
                 .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((requests) ->
-                        requests.requestMatchers(HttpMethod.POST, "/api/login", "/api/register").permitAll()
-                                .requestMatchers(HttpMethod.GET,"/api/health-check").permitAll()
-                                .requestMatchers(HttpMethod.GET,"/api/login/validate").permitAll()
+                        requests.requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                                .requestMatchers(HttpMethod.GET,"/actuator/health").permitAll()
                                 .anyRequest().authenticated()
                 );
 
