@@ -39,12 +39,14 @@ public class AuthService {
         User user = userRepository.findByUsername(credentialsDto.username()).orElse(null);
 
         // if the user is not valid, set a DUMMY HASH to force the Bcrypt validation to make the response time equal for both invalid username/password
-        String hashToCheck = (user != null) ? user.getPassword() : dummyHash;
+        // an inactive user is treated exactly like an unknown user
+        boolean canLogin = user != null && user.isActive();
+        String hashToCheck = canLogin ? user.getPasswordHash() : dummyHash;
 
         // validate password hash
         boolean matches = passwordEncoder.matches(CharBuffer.wrap(credentialsDto.password()), hashToCheck);
 
-        if (user == null || !matches) throw new AppException(ErrorCode.E02); // return unauthorized
+        if (!canLogin || !matches) throw new AppException(ErrorCode.E02); // return unauthorized
 
         // return user login dto
         return userMapper.userToUserLoginDto(user); // return the user

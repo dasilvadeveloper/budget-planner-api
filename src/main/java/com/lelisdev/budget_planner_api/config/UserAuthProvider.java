@@ -65,9 +65,8 @@ public class UserAuthProvider {
                 .withSubject(dto.getUsername())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
-                .withClaim("firstName", dto.getFirstName())
+                .withClaim("name", dto.getName())
                 .withClaim("id", dto.getId())
-                .withClaim("lastName", dto.getLastName())
                 .sign(algorithm);
     }
 
@@ -77,8 +76,7 @@ public class UserAuthProvider {
         UserLoginDto user = UserLoginDto.builder()
                 .id(decoded.getClaim("id").asString())
                 .username(decoded.getSubject())
-                .firstName(decoded.getClaim("firstName").asString())
-                .lastName(decoded.getClaim("lastName").asString())
+                .name(decoded.getClaim("name").asString())
                 .build();
 
         return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
@@ -88,6 +86,7 @@ public class UserAuthProvider {
         DecodedJWT decoded = verifier.verify(token);
 
         User user = userRepository.findByUsername(decoded.getSubject())
+                .filter(User::isActive)
                 .orElseThrow(()-> new AppException(ErrorCode.E03));
 
         return new UsernamePasswordAuthenticationToken(userMapper.userToUserLoginDto(user), null, Collections.emptyList());

@@ -10,7 +10,6 @@
     </parent>
     <groupId>com.lelisdev</groupId>
     <artifactId>budget-planner-api</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name/>
     <description/>
     <url/>
@@ -184,30 +183,21 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Só para uso manual na BD local (url fixo em localhost); não está ligado a nenhuma fase do build -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>12.4.0</version>
+                <configuration>
+                    <url>jdbc:postgresql://localhost:5432/budget-planner</url>
+                    <user>postgres</user>
+                    <password>${env.DB_PASSWORD}</password>
+                    <baselineOnMigrate>true</baselineOnMigrate>
+                    <locations>classpath:db/migration</locations>
+                    <cleanDisabled>false</cleanDisabled>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>local-dev</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.flywaydb</groupId>
-                        <artifactId>flyway-maven-plugin</artifactId>
-                        <version>12.4.0</version>
-                        <configuration>
-                            <url>jdbc:postgresql://localhost:5432/budget-planner</url>
-                            <user>postgres</user>
-                            <password>${env.DB_PASSWORD}</password>
-                            <baselineOnMigrate>true</baselineOnMigrate>
-                            <locations>classpath:db/migration</locations>
-                            <!-- REMOVER ANTES DE SUBIR PARA PRODUÇÃO -->
-                            <cleanDisabled>false</cleanDisabled>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

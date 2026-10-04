@@ -82,11 +82,10 @@ class JwtAuthFilterIntegrationTest {
 
     private User testUser() {
         return User.builder()
-                .firstName("Test")
-                .lastName("User")
+                .name("Test User")
                 .username(USERNAME)
                 .email("jwt-filter-test-user@example.com")
-                .password(passwordEncoder.encode(PASSWORD))
+                .passwordHash(passwordEncoder.encode(PASSWORD))
                 .build();
     }
 
