@@ -46,7 +46,8 @@ Local database migrations (outside of app startup) via the `flyway-maven-plugin`
 - `security.jwt.token.secret` also has no default (`application.properties` maps it to `${JWT_SECRET}`) — the app fails fast at startup (`UserAuthProvider.init()`) if it's missing, blank, or shorter than 32 bytes (HS256 minimum). `application-dev.properties` sets a fixed local-only value so `dev` profile runs don't need `JWT_SECRET` exported; any other profile/run does.
 - Activate the `dev` profile (`-Dspring-boot.run.profiles=dev` or `SPRING_PROFILES_ACTIVE=dev`) to enable SQL logging, the dev user seeder, and the dev JWT secret above.
 - The dev seeder (`config/DevSeedConfig`) only runs under the `dev` profile, only when the `users` table is empty, and only if `DEV_SEED_PASSWORD` is set — it creates a user `hendrik` with that password.
-- Running tests: `BudgetPlannerApiApplicationTests` (and any test without `@ActiveProfiles("dev")`) needs `JWT_SECRET` (32+ bytes) set in the environment, since it loads the base profile only. All tests are `@SpringBootTest` against the real local Postgres, so they also need a correct `DB_PASSWORD`.
+- Running tests: every test is `@SpringBootTest` with `@ActiveProfiles("test")`. `src/test/resources/application-test.properties` points them at a separate local database, `budget-planner-test` (overridable with `TEST_DB_URL`), and sets a fixed test-only JWT secret, so the only env var they need is `DB_PASSWORD`. New tests must use the `test` profile too, never `dev`.
+- Schema migrations run at app startup through `spring-boot-starter-flyway`. Without that starter (plain `flyway-core`) Spring Boot 4 has no Flyway auto-configuration and the app starts against an unmigrated database.
 
 ## Architecture
 
@@ -72,7 +73,7 @@ Dependencies are injected with `@Autowired` fields; values needed at startup are
 - Requests with no token to a protected endpoint get 401 `E05` from `RestExceptionHandler.commence()`, the `AuthenticationEntryPoint` wired into `SecurityConfig`.
 - Covered by `JwtAuthFilterIntegrationTest`: valid login + authenticated request → 200; token of a since-deleted user on a write request → 401. Note the deleted-user case must use a non-GET request, since GET intentionally skips the DB check by design.
 - `SecurityConfig` is stateless (no sessions), CSRF disabled, and only permits `POST /api/login`, and `GET /actuator/health`  everything else requires a valid JWT.
-- `WebConfig` sets up CORS allowing `http://localhost:4200` / `https://localhost:4200` (the Angular frontend's dev origin) with credentials.
+- `WebConfig` sets up CORS with credentials for the origins in `app.cors.allowed-origins` (env `CORS_ALLOWED_ORIGINS`, comma-separated), defaulting to `http://localhost:4200` / `https://localhost:4200` (the Angular frontend's dev origin).
 
 ### Error handling
 
@@ -86,14 +87,15 @@ Flyway-managed, SQL files in `src/main/resources/db/migration/`, following the `
 
 ### Profiles
 
-- `application.properties` — base config (Postgres connection, Flyway, Hibernate dialect).
+- `application.properties` — base config (Postgres connection, Flyway, Hibernate dialect, CORS origins, forwarded headers). Everything environment-specific is an env var (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`), so a deployment needs no extra properties file.
 - `application-dev.properties` — SQL logging, Flyway debug logging, dev-only JWT secret.
-- `application-prod.properties` — disables `flyway.clean`.
+- `application-prod.properties` — disables `flyway.clean`. Gitignored, so it does not reach a deployment; nothing may depend on it.
+- `application-test.properties` (in `src/test/resources`) — test database and test-only JWT secret.
 
 ## Next steps / known gaps
 
 - Standardize success responses with an `ApiResponse<T>` envelope (error responses are already uniform via `ErrorDto`).
-- No way to create the first user outside the `dev` profile.
-- No brute-force protection on `POST /api/login` yet (rate limit / lockout).
-- Tests run against the dev database; they need their own profile/DB.
+- No way to create a user through the API: outside the `dev` profile the first user is inserted by hand (see README).
+- No brute-force protection on `POST /api/login` yet (rate limit / lockout) — planned for the release after `0.1.0`.
+- No refresh token yet — planned for the release after `0.1.0`.
 - Core business entities not yet created: `Expense`, `Income`, `Category` — all with a direct FK to `user_id`.
