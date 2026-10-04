@@ -7,6 +7,8 @@ import com.lelisdev.budget_planner_api.exceptions.AppException;
 import com.lelisdev.budget_planner_api.mappers.UserMapper;
 import com.lelisdev.budget_planner_api.models.User;
 import com.lelisdev.budget_planner_api.repositories.UserRepository;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,18 +17,21 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final UserMapper userMapper;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserMapper userMapper;
 
     // real hash generated once at startup with the same encoder, so it always costs the same as a real user's hash
-    private final String dummyHash;
+    private String dummyHash;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.userMapper = userMapper;
-        this.dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
+    @PostConstruct
+    protected void init() {
+        dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
     }
 
     public UserLoginDto login(CredentialsDto credentialsDto) {

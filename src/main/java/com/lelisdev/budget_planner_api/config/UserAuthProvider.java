@@ -17,11 +17,18 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
 public class UserAuthProvider {
+
+    private static final String ISSUER = "budget-planner-api";
+    private static final long TOKEN_VALIDITY_MS = 3_600_000;
+    // HS256 precisa de uma chave com pelo menos 256 bits
+    private static final int MIN_SECRET_BYTES = 32;
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -29,40 +36,47 @@ public class UserAuthProvider {
     @Value("${security.jwt.token.secret}")
     private String secretKey;
 
+    private Algorithm algorithm;
+    private JWTVerifier verifier;
+
     @PostConstruct
     protected void init() {
         if (secretKey == null || secretKey.isBlank()) {
             throw new IllegalStateException(
                     "security.jwt.token.secret não está definido. ");
         }
-        secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
+
+        byte[] secretBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "security.jwt.token.secret tem de ter pelo menos " + MIN_SECRET_BYTES + " bytes.");
+        }
+
+        algorithm = Algorithm.HMAC256(secretBytes);
+        verifier = JWT.require(algorithm).withIssuer(ISSUER).build();
     }
 
     public String createToken(UserLoginDto dto) {
-
-        System.out.println("creating new token");
-
         Date now = new Date();
-        Date validity = new Date(now.getTime() + 3_600_000);
+        Date validity = new Date(now.getTime() + TOKEN_VALIDITY_MS);
 
         return JWT.create()
-                .withIssuer(dto.getUsername())
+                .withIssuer(ISSUER)
+                .withSubject(dto.getUsername())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
                 .withClaim("firstName", dto.getFirstName())
                 .withClaim("id", dto.getId())
                 .withClaim("lastName", dto.getLastName())
-                .sign(Algorithm.HMAC256(secretKey));
+                .sign(algorithm);
     }
 
     public Authentication validateToken(String token){
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-        JWTVerifier verifier = JWT.require(algorithm).build();
         DecodedJWT decoded = verifier.verify(token);
 
         UserLoginDto user = UserLoginDto.builder()
-                .username(decoded.getIssuer())
+                .id(decoded.getClaim("id").asString())
+                .username(decoded.getSubject())
                 .firstName(decoded.getClaim("firstName").asString())
                 .lastName(decoded.getClaim("lastName").asString())
                 .build();
@@ -71,13 +85,9 @@ public class UserAuthProvider {
     }
 
     public Authentication validateTokenStrongly(String token){
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-        JWTVerifier verifier = JWT.require(algorithm).build();
-
         DecodedJWT decoded = verifier.verify(token);
 
-        User user = userRepository.findByUsername(decoded.getIssuer())
+        User user = userRepository.findByUsername(decoded.getSubject())
                 .orElseThrow(()-> new AppException(ErrorCode.E03));
 
         return new UsernamePasswordAuthenticationToken(userMapper.userToUserLoginDto(user), null, Collections.emptyList());
