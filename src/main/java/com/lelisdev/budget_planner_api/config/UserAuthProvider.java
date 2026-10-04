@@ -4,12 +4,12 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lelisdev.budget_planner_api.dtos.UserDto;
+import com.lelisdev.budget_planner_api.dtos.UserLoginDto;
+import com.lelisdev.budget_planner_api.enums.ErrorCode;
 import com.lelisdev.budget_planner_api.exceptions.AppException;
 import com.lelisdev.budget_planner_api.mappers.UserMapper;
 import com.lelisdev.budget_planner_api.models.User;
 import com.lelisdev.budget_planner_api.repositories.UserRepository;
-import com.lelisdev.budget_planner_api.utils.Error;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +38,7 @@ public class UserAuthProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
-    public String createToken(UserDto dto) {
+    public String createToken(UserLoginDto dto) {
 
         System.out.println("creating new token");
 
@@ -61,7 +61,7 @@ public class UserAuthProvider {
         JWTVerifier verifier = JWT.require(algorithm).build();
         DecodedJWT decoded = verifier.verify(token);
 
-        UserDto user = UserDto.builder()
+        UserLoginDto user = UserLoginDto.builder()
                 .username(decoded.getIssuer())
                 .firstName(decoded.getClaim("firstName").asString())
                 .lastName(decoded.getClaim("lastName").asString())
@@ -78,8 +78,8 @@ public class UserAuthProvider {
         DecodedJWT decoded = verifier.verify(token);
 
         User user = userRepository.findByUsername(decoded.getIssuer())
-                .orElseThrow(()-> new AppException(Error.E1000));
+                .orElseThrow(()-> new AppException(ErrorCode.E03));
 
-        return new UsernamePasswordAuthenticationToken(userMapper.toDto(user), null, Collections.emptyList());
+        return new UsernamePasswordAuthenticationToken(userMapper.userToUserLoginDto(user), null, Collections.emptyList());
     }
 }

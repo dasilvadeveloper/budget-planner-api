@@ -1,10 +1,12 @@
 package com.lelisdev.budget_planner_api.config;
 
 import com.lelisdev.budget_planner_api.dtos.ErrorDto;
+import com.lelisdev.budget_planner_api.enums.ErrorCode;
 import com.lelisdev.budget_planner_api.exceptions.AppException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -16,49 +18,40 @@ import java.io.IOException;
 import java.util.Arrays;
 
 @ControllerAdvice
+@Slf4j
 public class RestExceptionHandler implements AuthenticationEntryPoint {
 
 
-@ExceptionHandler(value = {RuntimeException.class})
+    @ExceptionHandler(value = {RuntimeException.class})
     public ResponseEntity<ErrorDto> handleRuntimeException(RuntimeException exception) {
-        System.out.println("RuntimeException caught");
-        System.out.println(exception.getMessage());
-        System.out.println(Arrays.toString(exception.getStackTrace()));
+        log.info(exception.getMessage(), exception);
 
         return ResponseEntity.status(500)
-                .body(new ErrorDto(exception.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR));
+                .body(new ErrorDto(exception.getMessage(), ErrorCode.E01));
     }
 
     @ExceptionHandler(value = {ServletException.class})
     public ResponseEntity<ErrorDto> handleServletException(ServletException exception) {
-        System.out.println("ServletException caught");
-        System.out.println(exception.getMessage());
-        System.out.println(Arrays.toString(exception.getStackTrace()));
+        log.info(exception.getMessage(), exception);
 
         return ResponseEntity.status(500)
-                .body(new ErrorDto(exception.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR));
+                .body(new ErrorDto(exception.getMessage(), ErrorCode.E01));
     }
 
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<ErrorDto> handleException(Exception exception) {
-        System.out.println("Exception caught");
-        System.out.println(exception.getMessage());
-        System.out.println(Arrays.toString(exception.getStackTrace()));
+        log.info(exception.getMessage(), exception);
 
         return ResponseEntity.status(500)
-                .body(new ErrorDto(exception.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR));
+                .body(new ErrorDto(exception.getMessage(), ErrorCode.E01));
     }
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ErrorDto> handleAppException(AppException exception) {
-        System.out.println("AppException caught");
-        System.out.println(exception.getError().getMessage());
-        System.out.println(exception.getError().getHttpStatus());
-        exception.getStackTrace();
-
+        log.info(exception.getMessage(), exception);
 
         return ResponseEntity.status(exception.getError().getHttpStatus())
-                .body(new ErrorDto(exception.getError().getMessage(), exception.getError(), exception.getError().getHttpStatus()));
+                .body(new ErrorDto(exception.getError().getMessage(), exception.getError()));
     }
 
     @Override

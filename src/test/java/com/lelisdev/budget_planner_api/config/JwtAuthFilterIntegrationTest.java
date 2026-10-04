@@ -2,7 +2,7 @@ package com.lelisdev.budget_planner_api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lelisdev.budget_planner_api.dtos.CredentialsDto;
-import com.lelisdev.budget_planner_api.dtos.UserDto;
+import com.lelisdev.budget_planner_api.dtos.UserLoginDto;
 import com.lelisdev.budget_planner_api.models.User;
 import com.lelisdev.budget_planner_api.repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -99,7 +99,7 @@ class JwtAuthFilterIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        UserDto userDto = objectMapper.readValue(result.getResponse().getContentAsString(), UserDto.class);
+        UserLoginDto userDto = objectMapper.readValue(result.getResponse().getContentAsString(), UserLoginDto.class);
         return userDto.getToken();
     }
 

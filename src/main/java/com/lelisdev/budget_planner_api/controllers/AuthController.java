@@ -2,8 +2,8 @@ package com.lelisdev.budget_planner_api.controllers;
 
 import com.lelisdev.budget_planner_api.config.UserAuthProvider;
 import com.lelisdev.budget_planner_api.dtos.CredentialsDto;
-import com.lelisdev.budget_planner_api.dtos.UserDto;
-import com.lelisdev.budget_planner_api.services.UserService;
+import com.lelisdev.budget_planner_api.dtos.UserLoginDto;
+import com.lelisdev.budget_planner_api.services.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     @Autowired
-    UserService userService;
+    AuthService authService;
 
     @Autowired
     private UserAuthProvider userAuthProvider;
 
     @PostMapping("api/login")
-    public ResponseEntity<UserDto> login(@RequestBody CredentialsDto credentialsDto) {
+    public ResponseEntity<UserLoginDto> login(@RequestBody CredentialsDto credentialsDto) {
         System.out.println(credentialsDto);
-        UserDto userDto = userService.login(credentialsDto);
+        UserLoginDto userDto = authService.login(credentialsDto);
         userDto.setToken(userAuthProvider.createToken(userDto));
 
         return ResponseEntity.ok(userDto);

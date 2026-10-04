@@ -1,11 +1,10 @@
 package com.lelisdev.budget_planner_api.dtos;
 
-import com.lelisdev.budget_planner_api.utils.Error;
+import com.lelisdev.budget_planner_api.enums.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.http.HttpStatus;
 
 @Data
 @Builder
@@ -13,6 +12,5 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public class ErrorDto {
     String message;
-    Error code;
-    HttpStatus httpStatus;
+    ErrorCode code;
 }
