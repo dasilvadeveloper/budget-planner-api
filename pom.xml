@@ -10,9 +10,9 @@
     </parent>
     <groupId>com.lelisdev</groupId>
     <artifactId>budget-planner-api</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name/>
-    <description/>
+    <version>0.1.0</version>
+    <name>budget-planner-api</name>
+    <description>REST API for the Budget Planner application</description>
     <url/>
     <licenses>
         <license/>
@@ -28,7 +28,7 @@
     </scm>
     <properties>
         <java.version>17</java.version>
-        <mapstruct.version>1.7.0.Beta2</mapstruct.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
 
         <!-- Overrides de segurança: remover quando o Spring Boot já trouxer estas versões -->
         <logback.version>1.6.3</logback.version>
@@ -117,8 +117,8 @@
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
     </dependencies>
 
@@ -184,30 +184,21 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Só para uso manual na BD local (url fixo em localhost); não está ligado a nenhuma fase do build -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>12.4.0</version>
+                <configuration>
+                    <url>jdbc:postgresql://localhost:5432/budget-planner</url>
+                    <user>postgres</user>
+                    <password>${env.DB_PASSWORD}</password>
+                    <baselineOnMigrate>true</baselineOnMigrate>
+                    <locations>classpath:db/migration</locations>
+                    <cleanDisabled>false</cleanDisabled>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>local-dev</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.flywaydb</groupId>
-                        <artifactId>flyway-maven-plugin</artifactId>
-                        <version>12.4.0</version>
-                        <configuration>
-                            <url>jdbc:postgresql://localhost:5432/budget-planner</url>
-                            <user>postgres</user>
-                            <password>REMOVED</password>
-                            <baselineOnMigrate>true</baselineOnMigrate>
-                            <locations>classpath:db/migration</locations>
-                            <!-- REMOVER ANTES DE SUBIR PARA PRODUÇÃO -->
-                            <cleanDisabled>false</cleanDisabled>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

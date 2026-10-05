@@ -36,11 +36,10 @@ public class DevSeedConfig {
             }
 
             User user = new User();
-            user.setFirstName("Hendrik");
-            user.setLastName("Lelis");
+            user.setName("Hendrik Lelis");
             user.setUsername("hendrik");
             user.setEmail("johndoe@example.com");
-            user.setPassword(passwordEncoder.encode(devPassword));
+            user.setPasswordHash(passwordEncoder.encode(devPassword));
             userRepository.save(user);
 
 

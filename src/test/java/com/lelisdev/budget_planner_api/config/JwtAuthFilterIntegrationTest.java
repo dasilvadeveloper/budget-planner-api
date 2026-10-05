@@ -2,7 +2,7 @@ package com.lelisdev.budget_planner_api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lelisdev.budget_planner_api.dtos.CredentialsDto;
-import com.lelisdev.budget_planner_api.dtos.UserDto;
+import com.lelisdev.budget_planner_api.dtos.UserLoginDto;
 import com.lelisdev.budget_planner_api.models.User;
 import com.lelisdev.budget_planner_api.repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("dev")
+@ActiveProfiles("test")
 @Import(JwtAuthFilterIntegrationTest.TestPingConfig.class)
 class JwtAuthFilterIntegrationTest {
 
@@ -82,11 +82,10 @@ class JwtAuthFilterIntegrationTest {
 
     private User testUser() {
         return User.builder()
-                .firstName("Test")
-                .lastName("User")
+                .name("Test User")
                 .username(USERNAME)
                 .email("jwt-filter-test-user@example.com")
-                .password(passwordEncoder.encode(PASSWORD))
+                .passwordHash(passwordEncoder.encode(PASSWORD))
                 .build();
     }
 
@@ -99,7 +98,7 @@ class JwtAuthFilterIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        UserDto userDto = objectMapper.readValue(result.getResponse().getContentAsString(), UserDto.class);
+        UserLoginDto userDto = objectMapper.readValue(result.getResponse().getContentAsString(), UserLoginDto.class);
         return userDto.getToken();
     }
 
